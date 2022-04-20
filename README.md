@@ -10,6 +10,6 @@
        </p>
 </div>
 
-A desktop application which functions as a private journal. Entries are encrypted and decrypted using the Advanced Encryption Standard algorithm.
+A desktop application written in Python which functions as a private journal. Entries are encrypted and decrypted using the Advanced Encryption Standard algorithm.
 
 <sub>\* Logo by Christopher Ravosa :cowboy_hat_face:</sub>
