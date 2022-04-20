@@ -5,6 +5,6 @@
                      src="https://piskel-imgstore-b.appspot.com/img/08ffd482-c0e2-11ec-9fcc-d53fcae61d83.gif"
                      alt="Citrus Logo"
               />
-              <font size="3">Citrus Digital Journal</font>
+              _Citrus Digital Journal_
        </p>
 </div>
