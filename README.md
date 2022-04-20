@@ -1,5 +1,5 @@
-<div style='font-size: 20'>
-       <p>
+<div>
+       <p style='font-size: 20'>
               <img
                      width="32"
                      src="https://piskel-imgstore-b.appspot.com/img/08ffd482-c0e2-11ec-9fcc-d53fcae61d83.gif"
