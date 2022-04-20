@@ -1,9 +1,9 @@
 <div>
        <p float='left'>
               <img
-                     
+                     align="left"
                      width="32"
-                     src="https://piskel-imgstore-b.appspot.com/img/08ffd482-c0e2-11ec-9fcc-d53fcae61d83.gif"
+                     src="https://piskel-imgstore-b.appspot.com/img/5a964dd1-c0e5-11ec-9d78-d53fcae61d83.gif"
                      alt="Citrus Logo"
               />
        <h1>Citrus Digital Journal</h1>
