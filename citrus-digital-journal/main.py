@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-
-"""App.py: The entry point into the Citrus Digital Journal application."""
-
-__author__ = "Christopher P. Ravosa"
-__course__ = "MSCS 630L"
-__assignment__ = "Final Project"
-__due_date__ = "May 9, 2022"
-__version__ = "1.0"
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------------
+"""Main.py: The entry point into the Citrus Digital Journal application."""
+# ----------------------------------------------------------------------------
+# author: = Christopher P. Ravosa
+# course: MSCS 630L
+# assignment = Final Project
+# due_date: May 9, 2022
+# version: 1.0
+# ----------------------------------------------------------------------------
 
 from datetime import datetime
 
@@ -28,7 +30,6 @@ INPUT_INDENT_RIGHT = 33
 INPUT_INDENT_BOTTOM = 130
 
 
-# Handles callback when 'New Entry' button is pressed.
 def button_new_entry():
     # Bring new window into focus.
     dpg.push_container_stack(
@@ -68,6 +69,8 @@ def button_submit_entry():
     # TODO: Encrypt and store the entry.
     dpg.delete_item("Entry")
 
+
+# TODO: Create database on first spinup.
 
 # DPG context must be created first to access any DPG commands.
 dpg.create_context()
