@@ -160,7 +160,7 @@ class AESCipher:
 
     def aes_round_keys(self, key):
         """
-        aesRoundKeys
+        aes_round_keys
 
         Produces 11 round keys from a provided system key according to the key
         expansion aspect of the AES.
