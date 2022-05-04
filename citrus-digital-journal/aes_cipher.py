@@ -164,6 +164,9 @@ def aes_round_keys(key):
     parameter key: a 16 character string representing the system key
     return: an array of strings representing the 11 round keys.
     """
+    # DEBUG
+    print(key)
+
     # Used to return the round keys.
     round_keys = ["", "", "", "", "", "", "", "", "", "", ""]
 
@@ -173,7 +176,7 @@ def aes_round_keys(key):
 
     # Split input key into pairs of hex digits and store in key_hex_pairs.
     for _ in range(0, len(key)):
-        key_hex_pairs[_] = hex(ord(key[_])) # FIXME: This turns things into str which causes XOR issues.
+        key_hex_pairs[_] = format(ord(key[_]), '02x')
 
     # Counter to keep track of which pair of hex integers is on deck.
     pairs_index = 0
@@ -206,15 +209,17 @@ def aes_round_keys(key):
             w[row][col] = ke[row][col]
 
     # Iterate through all remaining columns of the w matrix.
-    for j in range(len(w)):
+    for j in range(4, len(w[0])):
+        print("Column: " + str(j))
+
         # Check if the column is not a multiple of four.
         if j % 4 != 0:
             # Perform an XOR operation on the 4th past and last column with
             # respect to the index of this column.
-            w[0][j] = w[0][j - 4] ^ w[0][j - 1]
-            w[1][j] = w[1][j - 4] ^ w[1][j - 1]
-            w[2][j] = w[2][j - 4] ^ w[2][j - 1]
-            w[3][j] = w[3][j - 4] ^ w[3][j - 1]
+            w[0][j] = format(int(w[0][j - 4], 16) ^ int(w[0][j - 1], 16), '02x')
+            w[1][j] = format(int(w[1][j - 4], 16) ^ int(w[1][j - 1], 16), '02x')
+            w[2][j] = format(int(w[2][j - 4], 16) ^ int(w[2][j - 1], 16), '02x')
+            w[3][j] = format(int(w[3][j - 4], 16) ^ int(w[3][j - 1], 16), '02x')
         # Handle column indices which ARE multiples of four.
         else:
             # Create column vector, w_new, with previous column.
@@ -235,18 +240,53 @@ def aes_round_keys(key):
                 else:
                     w_new[_] = w_new[_ + 1]
 
-            # Transform each of the four bytes in w_new using aes_s_box().
+            # Substitute each of the four bytes in w_new using the S-BOX table.
             for _ in range(len(w_new)):
                 w_new[_] = aes_s_box(w_new[_])
 
+            # Get the round constant using the R-CON search table.
+            r_con = aes_r_con(j >> 2)
+
+            # Perform XOR operation using round constant we just obtained.
+            w_new[0] = format(int(r_con, 16) ^ int(w_new[0], 16), '02x')
+
+            # Finally, w(j) can be defined as w(j) = w(j-4) XOR w_new.
+            w[0][j] = format(int(w[0][j - 4], 16) ^ int(w_new[0], 16), '02x')
+            w[1][j] = format(int(w[1][j - 4], 16) ^ int(w_new[1], 16), '02x')
+            w[2][j] = format(int(w[2][j - 4], 16) ^ int(w_new[2], 16), '02x')
+            w[3][j] = format(int(w[3][j - 4], 16) ^ int(w_new[3], 16), '02x')
+
         print_matrix(w)
+        print()
 
 
 def aes_s_box(in_hex):
-    row = in_hex[0]
-    col = in_hex[1]
+    """
+    aes_s_box
 
-    return S_BOX[row][col]
+    Finds the proper substitution for a hexadecimal integer in a column vector
+    by utilizing the AES substitution box lookup table.
+
+    parameter in_hex: a string representing a pair of hexadecimal digits
+    return: a hexadecimal integer.
+    """
+    row = int(in_hex[0], 16)
+    col = int(in_hex[1], 16)
+
+    return format(S_BOX[row][col], '02x')
+
+
+def aes_r_con(key_round):
+    """
+    aes_r_con
+
+    Utilizes the AES round constant lookup table to find the constant for a
+    given round of AES key scheduling.
+
+    parameter key_round: an integer >= 0
+    return: a hexadecimal integer representing an AES round constant.
+    """
+    return hex(R_CON[0][key_round])
 
 
 def print_matrix(matrix):
