@@ -131,3 +131,6 @@ dmypy.json
 # IntelliJ IDEA and Mac custom attributes
 .DS_Store
 .idea
+
+# Database files
+.db
