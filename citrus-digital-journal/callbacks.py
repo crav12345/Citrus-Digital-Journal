@@ -11,6 +11,7 @@
 # ----------------------------------------------------------------------------
 
 import dearpygui.dearpygui as dpg
+import aes_cipher as aes
 import database
 
 # Indents to keep form in viewport when writing a new journal entry.
@@ -74,13 +75,22 @@ def submit_entry():
     Saves a new journal entry to the database and then closes the form for
     creating a new journal entry.
     """
-    # Tell the GUI that this window is no longer in focus.
-    dpg.pop_container_stack()
-
     # TODO: Encrypt entry.
+    aes.aes_round_keys("aaaaaaaaaaaaaaaa")
+    aes.aes_round_keys("abababababababab")
+    aes.aes_round_keys("zzzzzzzzzzzzzzzz")
+    aes.aes_round_keys("abcabcabcabcabca")
+    aes.aes_round_keys("1234567890987654")
+    aes.aes_round_keys("a1b2c3d4e5f6g7h8")
 
     # Store entry to database.
     database.submit_entry(dpg.get_value("Entry Text"))
+
+    # Add new button to UI.
+    database.display_newest()
+
+    # Tell the GUI that this window is no longer in focus.
+    dpg.pop_container_stack()
 
     # Delete the form for submitting a new entry.
     dpg.delete_item("Entry Form")

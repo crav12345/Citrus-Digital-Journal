@@ -23,9 +23,6 @@ LARGE_ICON = "./resources/images/large-icon.ico"
 WINDOW_WIDTH = 600
 WINDOW_HEIGHT = 600
 
-# Padding to make columns clean on buttons.
-PADDING = 15
-
 # Establish connection to database.
 database.setup()
 
@@ -39,18 +36,9 @@ with dpg.window(tag="Primary Window"):
     dpg.add_button(label="New Entry", callback=callbacks.new_entry)
     dpg.add_text("")
     dpg.add_text("ENTRY NUMBER | DATE")
-    # Create table to display all entries.
-    with dpg.table(header_row=False):
-        # Only a single column of buttons to load entries.
-        dpg.add_table_column()
 
-        # Fill rows with all entries.
-        for i in range(0, 10):
-            with dpg.table_row():
-                entry_number_string = str(i).ljust(PADDING)
-                label = entry_number_string + str(datetime.now())
-
-                dpg.add_button(label=label)
+    # Fill rows with all entries in database.
+    database.display_all()
 
 # Create and show the window to be displayed by the OS.
 dpg.create_viewport(
