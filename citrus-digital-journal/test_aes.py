@@ -193,3 +193,5 @@ class TestAES(unittest.TestCase):
             aes.aes("One two three fo", "abcabcabcabcabca"),
             "56dc396cbc98507016762ee36c5c8544"
         )
+        aes.aes("Hello! How are you doing today good sir?!", "kappasigmakappasigma")
+        aes.aes("Hello! How are you?!", "kappasig")

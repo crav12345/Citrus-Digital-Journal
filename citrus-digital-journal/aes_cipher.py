@@ -482,6 +482,23 @@ def aes(p_text, key):
     parameter key_hex: The 16-bit system key w/ which the string is encrypted
     return: a ciphertext representation of the original plaintext.
     """
+    # Check that the length of the plaintext is a multiple of sixteen. If this
+    # is not the case, pad the plaintext with enough spaces to make it so.
+    # TODO: Need to fix the plaintext padding.
+    if 16 % len(p_text) > 0: # FIXME
+        p_text += "-" * (16 % len(p_text)) # FIXME
+
+    # Check that the key doesn't need to be padded either.
+    if len(key) < 16:
+        key += "-" * (16 - len(key))
+
+    # If the key is too long, shrink it to 16 bits.
+    if len(key) > 16:
+        key = key[:len(key) - (len(key) - 16)]
+
+    print(p_text)
+    print(key)
+
     # Stores the ciphertext which will be returned.
     c_text = ""
 

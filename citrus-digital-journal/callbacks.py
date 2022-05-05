@@ -75,10 +75,11 @@ def submit_entry():
     Saves a new journal entry to the database and then closes the form for
     creating a new journal entry.
     """
-    # TODO: Encrypt entry.
+    # Encrypt entry.
+    encrypted_text = aes.aes(dpg.get_value("Entry Text"))
 
     # Store entry to database.
-    database.submit_entry(dpg.get_value("Entry Text"))
+    database.submit_entry(encrypted_text)
 
     # Add new button to UI.
     database.display_newest()
