@@ -164,9 +164,6 @@ def aes_round_keys(key):
     parameter key: a 16 character string representing the system key
     return: an array of strings representing the 11 round keys.
     """
-    # DEBUG
-    print(key)
-
     # Used to return the round keys.
     round_keys = ["", "", "", "", "", "", "", "", "", "", ""]
 
@@ -178,9 +175,6 @@ def aes_round_keys(key):
     for _ in range(0, len(key)):
         key_hex_pairs[_] = format(ord(key[_]), '02x')
 
-    # Counter to keep track of which pair of hex integers is on deck.
-    pairs_index = 0
-
     # Stores the matrix representation of our system key.
     ke = [
         [0x00] * 4,
@@ -188,6 +182,9 @@ def aes_round_keys(key):
         [0x00] * 4,
         [0x00] * 4
     ]
+
+    # Counter to keep track of which pair of hex integers is on deck.
+    pairs_index = 0
 
     # Fill ke matrix with the hex integers.
     for row in range(len(ke)):
@@ -210,8 +207,6 @@ def aes_round_keys(key):
 
     # Iterate through all remaining columns of the w matrix.
     for j in range(4, len(w[0])):
-        print("Column: " + str(j))
-
         # Check if the column is not a multiple of four.
         if j % 4 != 0:
             # Perform an XOR operation on the 4th past and last column with
@@ -256,8 +251,12 @@ def aes_round_keys(key):
             w[2][j] = format(int(w[2][j - 4], 16) ^ int(w_new[2], 16), '02x')
             w[3][j] = format(int(w[3][j - 4], 16) ^ int(w_new[3], 16), '02x')
 
-        print_matrix(w)
-        print()
+    # Load 4x4 chunks of w into strings in the round_keys array.
+    for row in range(len(w)):
+        for col in range(len(w[0])):
+            round_keys[col >> 2] += w[row][col]
+
+    return round_keys
 
 
 def aes_s_box(in_hex):
@@ -286,7 +285,276 @@ def aes_r_con(key_round):
     parameter key_round: an integer >= 0
     return: a hexadecimal integer representing an AES round constant.
     """
-    return hex(R_CON[0][key_round])
+    return format(R_CON[0][key_round], '02x')
+
+
+def aes_state_xor(s_hex, key_hex):
+    """
+    aes_state_xor
+
+    Performs the AES 'add round key' operation, producing an output matrix
+    which represents the XOR of the corresponding input matrices.
+
+    parameter s_hex: a 4x4 matrix of integers
+    parameter key_hex: a 4x4 matrix of hex integers
+    return: a 4x4 matrix representing the XOR of the input matrices.
+    """
+    # Resulting XOR matrix which will be returned.
+    out_state_hex = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Perform an XOR operation on each of the columns of the two input
+    # matrices, storing the result in out_state_hex.
+    for row in range(len(out_state_hex)):
+        out_state_hex[row][0] = format(
+            int(s_hex[row][0], 16) ^ int(key_hex[row][0], 16), '02x'
+        )
+        out_state_hex[row][1] = format(
+            int(s_hex[row][1], 16) ^ int(key_hex[row][1], 16), '02x'
+        )
+        out_state_hex[row][2] = format(
+            int(s_hex[row][2], 16) ^ int(key_hex[row][2], 16), '02x'
+        )
+        out_state_hex[row][3] = format(
+            int(s_hex[row][3], 16) ^ int(key_hex[row][3], 16), '02x'
+        )
+
+    return out_state_hex
+
+
+def aes_nibble_sub(in_state_hex):
+    """
+    aes_nibble_sub
+
+    Creates and returns a matrix whose values represent S-Box substitutions
+    performed on the input matrix's indices.
+
+    parameter in_state_hex: a 4x4 matrix of hexadecimal integers
+    return: a 4x4 matrix of S-Box substitutions of the input matrix.
+    """
+    # Resulting substitution matrix which will be returned.
+    out_state_hex = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Perform S-Box substitutions on each index of in_state_hex and store the
+    # results in the out_state_hex matrix.
+    for row in range(len(in_state_hex)):
+        for col in range(len(in_state_hex[0])):
+            out_state_hex[row][col] = aes_s_box(in_state_hex[row][col])
+
+    return out_state_hex
+
+
+def aes_shift_row(in_state_hex):
+    """
+    aes_shift_row
+
+    Performs a transformation on each row of an input matrix which shifts the
+    values in each row left an amount based on the row index.
+
+    parameter in_state_hex: a 4x4 matrix of hexadecimal integers
+    return: a 4x4 matrix representing the transformed input matrix.
+    """
+    # Transform every row of in_state_hex.
+    for row in range(len(in_state_hex)):
+        # Shift the row as many times as needed.
+        for transforms in range(row):
+            # Store leading element of in_state_hex, so we can shift left.
+            temp = in_state_hex[row][0]
+
+            # Shift all elements left.
+            for col in range(len(in_state_hex[row])):
+                if col == len(in_state_hex) - 1:
+                    in_state_hex[row][col] = temp
+                else:
+                    in_state_hex[row][col] = in_state_hex[row][col + 1]
+
+    return in_state_hex
+
+
+def aes_mix_column(s):
+    """
+    aes_mix_column
+
+    Performs the 'mix column' operation of AES to transform the input matrix
+    to a further diffused matrix. This is done by performing a number of
+    multiplication operations over Galois fields.
+
+    parameter s: a 4x4 state matrix of hexadecimal integers
+    return: a 4x4 matrix representing the AES mixed input matrix.
+    """
+    s_prime = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Perform multiplications over Galois fields to compute mix on each column
+    # in s.
+    for col in range(len(s[0])):
+        # Formula for row 1.
+        s_prime[0][col] = format(
+            int(gf2(s[0][col]), 16) ^
+            int(gf3(s[1][col]), 16) ^
+            int(s[2][col], 16) ^
+            int(s[3][col], 16)
+            , '02x'
+        )
+
+        # Formula for row 2.
+        s_prime[1][col] = format(
+            int(s[0][col], 16) ^
+            int(gf2(s[1][col]), 16) ^
+            int(gf3(s[2][col]), 16) ^
+            int(s[3][col], 16)
+            , '02x'
+        )
+
+        # Formula for row 3.
+        s_prime[2][col] = format(
+            int(s[0][col], 16) ^
+            int(s[1][col], 16) ^
+            int(gf2(s[2][col]), 16) ^
+            int(gf3(s[3][col]), 16)
+            , '02x'
+        )
+
+        # Formula for row 4.
+        s_prime[3][col] = format(
+            int(gf3(s[0][col]), 16) ^
+            int(s[1][col], 16) ^
+            int(s[2][col], 16) ^
+            int(gf2(s[3][col]), 16)
+            , '02x'
+        )
+
+    return s_prime
+
+
+def gf2(in_hex):
+    """
+    gf2
+
+    Performs a lookup to multiply a hex value by 2 over a Galois field to
+    complete the 'mix columns' step of AES.
+
+    parameter in_hex: a pair of hexadecimal digits
+    return: a Galois field substitution for a hex value multiplied by 2.
+    """
+    row = int(in_hex[0], 16)
+    col = int(in_hex[1], 16)
+
+    return format(GALOIS_FIELD_2[row][col], '02x')
+
+
+def gf3(in_hex):
+    """
+    gf3
+
+    Performs a lookup to multiply a hex value by 3 over a Galois field to
+    complete the 'mix columns' step of AES.
+
+    parameter in_hex: a pair of hexadecimal digits
+    return: a Galois field substitution for a hex value multiplied by 3.
+    """
+    row = int(in_hex[0], 16)
+    col = int(in_hex[1], 16)
+
+    return format(GALOIS_FIELD_3[row][col], '02x')
+
+
+def aes(p_text, key):
+    """
+    aes
+
+    Executes an entire AES implementation to encrypt a string.
+
+    parameter p_text: A plaintext string to be encrypted
+    parameter key_hex: The 16-bit system key w/ which the string is encrypted
+    return: a ciphertext representation of the original plaintext.
+    """
+    # Stores the ciphertext which will be returned.
+    c_text = ""
+
+    # Stores the state matrix as it's created.
+    out_state_hex = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Matrix to store and add keys after they've been generated.
+    key_hex_matrix = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Matrix to store the encryption.
+    s_hex = [
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4,
+        [0x00] * 4
+    ]
+
+    # Array used to split the input p_text into pairs of hex digits for
+    # storage in the 4x4 matrix representation s_hex.
+    p_hex_pairs = [""] * 16
+
+    # Split input key into pairs of hex digits and store in key_hex_pairs.
+    for _ in range(0, len(key)):
+        p_hex_pairs[_] = format(ord(p_text[_]), '02x')
+
+    # Generate the keys for each round of encryption.
+    round_keys_hex = aes_round_keys(key)
+
+    # Counter to keep track of which pair of hex integers is on deck.
+    pairs_index = 0
+
+    # Fill s_hex matrix with the plaintext hex representations.
+    for row in range(len(s_hex)):
+        for col in range(len(s_hex[row])):
+            s_hex[row][col] = p_hex_pairs[pairs_index]
+            pairs_index += 1
+
+    # Begin 11 rounds of encryption.
+    for aes_round in range(11):
+        # Locates characters in round_keys_hex.
+        character_index = 0
+
+        # Convert current round key to a 4x4 matrix.
+        for row in range(len(key_hex_matrix)):
+            for col in range(len(key_hex_matrix[row])):
+                key_hex_matrix[row][col] = \
+                    round_keys_hex[aes_round][character_index] + \
+                    round_keys_hex[aes_round][character_index + 1]
+                character_index += 2
+
+        # Perform the encryption round.
+        if aes_round == len(round_keys_hex) - 1:
+            out_state_hex = aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix)))
+        else:
+            out_state_hex = aes_mix_column(aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix))))
+
+    # Convert result matrix to a ciphertext string.
+    for state_hex in out_state_hex:
+        for hex_pair in state_hex:
+            c_text += hex_pair
+
+    # Return the ciphertext.
+    return c_text
 
 
 def print_matrix(matrix):

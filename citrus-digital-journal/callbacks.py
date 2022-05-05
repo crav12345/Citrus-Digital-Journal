@@ -76,12 +76,6 @@ def submit_entry():
     creating a new journal entry.
     """
     # TODO: Encrypt entry.
-    # aes.aes_round_keys("aaaaaaaaaaaaaaaa")
-    # aes.aes_round_keys("abababababababab")
-    # aes.aes_round_keys("zzzzzzzzzzzzzzzz")
-    aes.aes_round_keys("abcabcabcabcabca")
-    # aes.aes_round_keys("1234567890987654")
-    # aes.aes_round_keys("a1b2c3d4e5f6g7h8")
 
     # Store entry to database.
     database.submit_entry(dpg.get_value("Entry Text"))
