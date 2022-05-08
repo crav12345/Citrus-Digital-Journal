@@ -548,7 +548,7 @@ def aes_encrypt(p_text, key):
                 s_hex[row][col] = p_hex_pairs[pairs_index]
                 pairs_index += 1
 
-        # Begin 11 rounds of encryption.
+        # Begin 10 rounds of encryption.
         for aes_round in range(11):
             # Locates characters in round_keys_hex.
             character_index = 0
@@ -628,8 +628,40 @@ def aes_decrypt(c_text, key):
             [0x00] * 4
         ]
 
-        # Generate the keys for each round of decryption.
-        round_keys_hex = aes_round_keys(key)
+        # Generate the keys for each round of encryption and reverse it for
+        # decryption.
+        round_keys_hex = aes_round_keys(key)[::-1]
+
+        # Counter to keep track of which pair of hex integers is on deck.
+        pairs_index = 0
+
+        # Fill s_hex matrix with the ciphertext hex pairs.
+        for row in range(len(s_hex)):
+            for col in range(len(s_hex[row])):
+                pair = c_text_snippet[pairs_index] + c_text_snippet[pairs_index + 1]
+                s_hex[row][col] = pair
+                pairs_index += 2
+
+        # Begin 10 rounds of decryption.
+        for aes_round in range(11):
+            # Locates characters in round_keys_hex.
+            character_index = 0
+
+            # Convert current round key to a 4x4 matrix.
+            for row in range(len(key_hex_matrix)):
+                for col in range(len(key_hex_matrix[row])):
+                    key_hex_matrix[row][col] = \
+                        round_keys_hex[aes_round][character_index] + \
+                        round_keys_hex[aes_round][character_index + 1]
+                    character_index += 2
+
+            # Perform the decryption round.
+            if aes_round == len(round_keys_hex) - 1:
+                out_state_hex = aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix)))
+            else:
+                out_state_hex = aes_mix_column(aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix))))
+
+            # TODO: Convert result back to ASCII characters.
 
 
 def print_matrix(matrix):

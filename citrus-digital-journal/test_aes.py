@@ -195,7 +195,7 @@ class TestAES(unittest.TestCase):
             ]
         )
 
-    def test_aes(self):
+    def test_aes_encrypt(self):
         self.assertEqual(
             aes.aes_encrypt("Hello World!!!!!", "aaaaaaaaaaaaaaaa"),
             "90cc16ff2aa63d2d790023da52d611e1"
@@ -230,3 +230,6 @@ class TestAES(unittest.TestCase):
             "2085fee088dcdf746db5801e2135dccdcfd083c87032bb3dd5144055215d88609"
             "c8383245732ac974986bc1e070eb561"
         )
+
+    def test_aes_decrypt(self):
+        aes.aes_decrypt("0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af", "kappasig")
