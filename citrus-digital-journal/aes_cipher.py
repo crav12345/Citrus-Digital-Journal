@@ -472,21 +472,21 @@ def gf3(in_hex):
     return format(GALOIS_FIELD_3[row][col], '02x')
 
 
-def aes(p_text, key):
+def aes_encrypt(p_text, key):
     """
-    aes
+    aes_encrypt
 
     Executes an entire AES implementation to encrypt a string.
 
     parameter p_text: A plaintext string to be encrypted
-    parameter key_hex: The 16-bit system key w/ which the string is encrypted
+    parameter key: The 16-bit system key w/ which the string is encrypted
     return: a ciphertext representation of the original plaintext.
     """
     # Check that the length of the plaintext is a multiple of sixteen. If this
     # is not the case, pad the plaintext with enough spaces to make it so.
-    # TODO: Need to fix the plaintext padding.
-    if 16 % len(p_text) > 0: # FIXME
-        p_text += "-" * (16 % len(p_text)) # FIXME
+    remainder = len(p_text) % 16
+    if remainder > 0:
+        p_text += "-" * (16 - remainder)
 
     # Check that the key doesn't need to be padded either.
     if len(key) < 16:
@@ -496,82 +496,140 @@ def aes(p_text, key):
     if len(key) > 16:
         key = key[:len(key) - (len(key) - 16)]
 
-    print(p_text)
-    print(key)
-
     # Stores the ciphertext which will be returned.
     c_text = ""
 
-    # Stores the state matrix as it's created.
-    out_state_hex = [
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4
-    ]
+    # Complete AES encryption on every chunk of 16 characters in the plaintext.
+    while p_text:
+        p_text_snippet = p_text[0: 16]
+        p_text = p_text[16:]
 
-    # Matrix to store and add keys after they've been generated.
-    key_hex_matrix = [
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4
-    ]
+        # Stores the state matrix as it's created.
+        out_state_hex = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
 
-    # Matrix to store the encryption.
-    s_hex = [
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4,
-        [0x00] * 4
-    ]
+        # Matrix to store and add keys after they've been generated.
+        key_hex_matrix = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
 
-    # Array used to split the input p_text into pairs of hex digits for
-    # storage in the 4x4 matrix representation s_hex.
-    p_hex_pairs = [""] * 16
+        # Matrix to store the encryption.
+        s_hex = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
 
-    # Split input key into pairs of hex digits and store in key_hex_pairs.
-    for _ in range(0, len(key)):
-        p_hex_pairs[_] = format(ord(p_text[_]), '02x')
+        # Array used to split the input p_text into pairs of hex digits for
+        # storage in the 4x4 matrix representation s_hex.
+        p_hex_pairs = [""] * 16
 
-    # Generate the keys for each round of encryption.
-    round_keys_hex = aes_round_keys(key)
+        # Expand p_text_snippet into pairs of hex digits and store in p_hex_pairs.
+        for _ in range(0, len(key)):
+            p_hex_pairs[_] = format(ord(p_text_snippet[_]), '02x')
 
-    # Counter to keep track of which pair of hex integers is on deck.
-    pairs_index = 0
+        # Generate the keys for each round of encryption.
+        round_keys_hex = aes_round_keys(key)
 
-    # Fill s_hex matrix with the plaintext hex representations.
-    for row in range(len(s_hex)):
-        for col in range(len(s_hex[row])):
-            s_hex[row][col] = p_hex_pairs[pairs_index]
-            pairs_index += 1
+        # Counter to keep track of which pair of hex integers is on deck.
+        pairs_index = 0
 
-    # Begin 11 rounds of encryption.
-    for aes_round in range(11):
-        # Locates characters in round_keys_hex.
-        character_index = 0
+        # Fill s_hex matrix with the plaintext hex representations.
+        for row in range(len(s_hex)):
+            for col in range(len(s_hex[row])):
+                s_hex[row][col] = p_hex_pairs[pairs_index]
+                pairs_index += 1
 
-        # Convert current round key to a 4x4 matrix.
-        for row in range(len(key_hex_matrix)):
-            for col in range(len(key_hex_matrix[row])):
-                key_hex_matrix[row][col] = \
-                    round_keys_hex[aes_round][character_index] + \
-                    round_keys_hex[aes_round][character_index + 1]
-                character_index += 2
+        # Begin 11 rounds of encryption.
+        for aes_round in range(11):
+            # Locates characters in round_keys_hex.
+            character_index = 0
 
-        # Perform the encryption round.
-        if aes_round == len(round_keys_hex) - 1:
-            out_state_hex = aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix)))
-        else:
-            out_state_hex = aes_mix_column(aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix))))
+            # Convert current round key to a 4x4 matrix.
+            for row in range(len(key_hex_matrix)):
+                for col in range(len(key_hex_matrix[row])):
+                    key_hex_matrix[row][col] = \
+                        round_keys_hex[aes_round][character_index] + \
+                        round_keys_hex[aes_round][character_index + 1]
+                    character_index += 2
 
-    # Convert result matrix to a ciphertext string.
-    for state_hex in out_state_hex:
-        for hex_pair in state_hex:
-            c_text += hex_pair
+            # Perform the encryption round.
+            if aes_round == len(round_keys_hex) - 1:
+                out_state_hex = aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix)))
+            else:
+                out_state_hex = aes_mix_column(aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix))))
+
+        # Convert result matrix to a ciphertext string.
+        for state_hex in out_state_hex:
+            for hex_pair in state_hex:
+                c_text += hex_pair
 
     # Return the ciphertext.
     return c_text
+
+
+def aes_decrypt(c_text, key):
+    """
+    aes_decrypt
+
+    Executes an entire AES implementation to decrypt a string.
+
+    parameter c_text: A ciphertext string to be decrypted
+    parameter key: The 16-bit system key w/ which the string was encrypted
+    return: a plaintext representation of the original plaintext.
+    """
+    # We know the c_text is divisible by 16, so we don't need to touch it. We
+    # do still need to check that the key doesn't need to be padded.
+    if len(key) < 16:
+        key += "-" * (16 - len(key))
+
+    # If the key is too long, shrink it to 16 bits.
+    if len(key) > 16:
+        key = key[:len(key) - (len(key) - 16)]
+
+    # Stores the plaintext which will be returned.
+    p_text = ""
+
+    # Complete AES decryption on each chunk of 32 bits in the ciphertext.
+    # NOTE: c_text doesn't need to be expanded because it's already hex pairs.
+    while c_text:
+        c_text_snippet = c_text[0: 32]
+        c_text = c_text[32:]
+
+        # Stores the state matrix as it's created.
+        out_state_hex = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
+
+        # Matrix to store and add keys after they've been generated.
+        key_hex_matrix = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
+
+        # Matrix to store the decryption.
+        s_hex = [
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4,
+            [0x00] * 4
+        ]
+
+        # Generate the keys for each round of decryption.
+        round_keys_hex = aes_round_keys(key)
 
 
 def print_matrix(matrix):

@@ -60,5 +60,3 @@ dpg.start_dearpygui()
 
 # Terminate DPG.
 dpg.destroy_context()
-
-# TODO: Ability to click on an entry to view encrypted version. Decrypt button with prompt for key.

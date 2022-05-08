@@ -14,9 +14,9 @@ import dearpygui.dearpygui as dpg
 import aes_cipher as aes
 import database
 
-# Indents to keep form in viewport when writing a new journal entry.
-INPUT_INDENT_RIGHT = 33
-INPUT_INDENT_BOTTOM = 130
+# Indents to keep form in viewport.
+INDENT_RIGHT = 33
+INDENT_BOTTOM = 130
 
 # Application viewport dimensions.
 WINDOW_WIDTH = 600
@@ -48,23 +48,22 @@ def new_entry():
     dpg.add_input_text(
         tag="Entry Text",
         multiline=True,
-        width=WINDOW_WIDTH - INPUT_INDENT_RIGHT,
-        height=WINDOW_HEIGHT - INPUT_INDENT_BOTTOM
+        width=WINDOW_WIDTH - INDENT_RIGHT,
+        height=WINDOW_HEIGHT - INDENT_BOTTOM
     )
-    # TODO: Only enable SUBMIT when text exists in the input form.
     dpg.add_button(label="SUBMIT", callback=submit_entry)
-    dpg.add_button(label="CANCEL", callback=cancel_entry)
+    dpg.add_button(label="CANCEL", callback=lambda s: close_window("Entry Form"))
 
 
 # Handles callback when 'Cancel' button is pressed when creating a new entry.
-def cancel_entry():
+def close_window(window_tag):
     """
-    cancel_entry
+    close_window
 
-    Closes the form for creating a new journal entry.
+    Closes the target window.
     """
     dpg.pop_container_stack()
-    dpg.delete_item("Entry Form")
+    dpg.delete_item(window_tag)
 
 
 # Handles callback when 'Submit' button is pressed when creating a new entry.
@@ -72,11 +71,44 @@ def submit_entry():
     """
     submit_entry
 
-    Saves a new journal entry to the database and then closes the form for
-    creating a new journal entry.
+    Opens a form for entering a key with which the entry will be encrypted.
+    """
+    # Prompt user for a secret key.
+    # Bring new window into focus.
+    dpg.push_container_stack(
+        dpg.add_window(
+            tag="Key Form",
+            label="New Key",
+            width=WINDOW_WIDTH,
+            height=WINDOW_HEIGHT,
+            no_resize=True,
+            no_move=True,
+            no_collapse=True,
+            no_title_bar=True
+        )
+    )
+
+    # Populate the new window.
+    dpg.add_text("SECRET KEY")
+    dpg.add_input_text(
+        tag="Key Text",
+        multiline=False
+    )
+    dpg.add_button(label="ENCRYPT", callback=encrypt_entry)
+
+
+def encrypt_entry():
+    """
+    encrypt_entry
+
+    Encrypts and saves a new journal entry to the database and then closes the
+    form for creating a new journal entry.
     """
     # Encrypt entry.
-    encrypted_text = aes.aes(dpg.get_value("Entry Text"))
+    encrypted_text = aes.aes_encrypt(
+        dpg.get_value("Entry Text"),
+        dpg.get_value("Key Text")
+    )
 
     # Store entry to database.
     database.submit_entry(encrypted_text)
@@ -87,5 +119,42 @@ def submit_entry():
     # Tell the GUI that this window is no longer in focus.
     dpg.pop_container_stack()
 
+    # Delete the form for submitting a key.
+    dpg.delete_item("Key Form")
+
+    # Tell the GUI that entry window is no longer in focus.
+    dpg.pop_container_stack()
+
     # Delete the form for submitting a new entry.
     dpg.delete_item("Entry Form")
+
+
+def decrypt_entry():
+    print("Not implemented")
+
+
+def display_entry(entry_number):
+    """
+    display_entry
+
+    Displays the selected journal entry.
+    """
+    # Bring new window into focus.
+    dpg.push_container_stack(
+        dpg.add_window(
+            tag="Entry Display",
+            label="Entry Display",
+            width=WINDOW_WIDTH,
+            height=WINDOW_HEIGHT,
+            no_resize=True,
+            no_move=True,
+            no_collapse=True,
+            no_title_bar=True
+        )
+    )
+
+    # Populate the new window.
+    dpg.add_text("Journal Entry #" + entry_number)
+    dpg.add_text(database.get_entry_text(entry_number), wrap=WINDOW_WIDTH - INDENT_RIGHT)
+    dpg.add_button(label="DECRYPT", callback=decrypt_entry)
+    dpg.add_button(label="EXIT", callback=lambda s: close_window("Entry Display"))

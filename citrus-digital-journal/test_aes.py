@@ -1,5 +1,16 @@
-import unittest
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------------
+"""Test_aes.py: Test suite for AES code for Citrus Digital Journal."""
+# ----------------------------------------------------------------------------
+# author: = Christopher P. Ravosa
+# course: MSCS 630L
+# assignment = Final Project
+# due_date: May 9, 2022
+# version: 1.0
+# ----------------------------------------------------------------------------
 
+import unittest
 import aes_cipher as aes
 
 
@@ -186,12 +197,36 @@ class TestAES(unittest.TestCase):
 
     def test_aes(self):
         self.assertEqual(
-            aes.aes("Hello World!!!!!", "aaaaaaaaaaaaaaaa"),
+            aes.aes_encrypt("Hello World!!!!!", "aaaaaaaaaaaaaaaa"),
             "90cc16ff2aa63d2d790023da52d611e1"
         )
         self.assertEqual(
-            aes.aes("One two three fo", "abcabcabcabcabca"),
+            aes.aes_encrypt("One two three fo", "abcabcabcabcabca"),
             "56dc396cbc98507016762ee36c5c8544"
         )
-        aes.aes("Hello! How are you doing today good sir?!", "kappasigmakappasigma")
-        aes.aes("Hello! How are you?!", "kappasig")
+        self.assertEqual(
+            aes.aes_encrypt("12345678901234567", "kappasigmakappasigma"),
+            "d78000a10c0d373e4297266c26741fba2b3f299bb81e5cdd87b89a060748b561"
+        )
+        self.assertEqual(
+            aes.aes_encrypt("12345678901234567890", "kappasig"),
+            "0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af"
+        )
+        self.assertEqual(
+            aes.aes_encrypt(
+                "12345678901234567890123456789012345678",
+                "abcdefghijklmnop"
+            ),
+            "5d85b897d098333f6f13a6bf849398843d3c600c438e02fd63c4dd89b3348eb3"
+            "73efde179f418fcca25e3e1e20eb0f5b"
+        )
+        self.assertEqual(
+            aes.aes_encrypt(
+                "Today I went to see mom back at home. We ate lunch together,"
+                "then I came back.",
+                "kappasigmakappasigma"
+            ),
+            "45856b49885dac5ed32e3c5596353db8843cf2d961d3aca74986bc1e96350b0c"
+            "2085fee088dcdf746db5801e2135dccdcfd083c87032bb3dd5144055215d88609"
+            "c8383245732ac974986bc1e070eb561"
+        )

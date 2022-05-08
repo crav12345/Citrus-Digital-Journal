@@ -1,6 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------------
+"""Database.py: Handles data updates & queries for Citrus Digital Journal."""
+# ----------------------------------------------------------------------------
+# author: = Christopher P. Ravosa
+# course: MSCS 630L
+# assignment = Final Project
+# due_date: May 9, 2022
+# version: 1.0
+# ----------------------------------------------------------------------------
+
 from datetime import datetime
 import sqlite3
 import dearpygui.dearpygui as dpg
+import callbacks
 
 # Padding to make columns clean on buttons.
 PADDING = 15
@@ -24,7 +37,8 @@ def setup():
                 entryNumber integer PRIMARY KEY,
                 date text,
                 entry text
-            )'''
+            )
+        '''
     )
 
     # Save (commit) the changes.
@@ -73,11 +87,17 @@ def display_all():
     connection = sqlite3.connect('./entries.db')
     cursor = connection.cursor()
 
-    # Query the database for every journal entry.
+    # Query the database for every journal entry and make buttons for them.
     for row in cursor.execute('SELECT * FROM entries ORDER BY entryNumber'):
-        entry_number_string = str(row[0]).ljust(PADDING)
+        entry_number = str(row[0])
+        entry_number_string = entry_number.ljust(PADDING)
         label = entry_number_string + row[1]
-        dpg.add_button(label=label)
+        dpg.add_button(
+            label=label,
+            callback=lambda s, a, u:
+                callbacks.display_entry(u),
+            user_data=entry_number
+        )
 
     # Close connection when finished.
     connection.close()
@@ -93,10 +113,44 @@ def display_newest():
     connection = sqlite3.connect('./entries.db')
     cursor = connection.cursor()
 
-    for row in cursor.execute("""SELECT * FROM entries ORDER BY entryNumber DESC LIMIT 1"""):
-        entry_number_string = str(row[0]).ljust(PADDING)
+    # Query database for last entry and create a button for it.
+    for row in cursor.execute(
+            'SELECT * FROM entries ORDER BY entryNumber DESC LIMIT 1'
+    ):
+        entry_number = str(row[0])
+        entry_number_string = entry_number.ljust(PADDING)
         label = entry_number_string + row[1]
-        dpg.add_button(label=label, parent="Primary Window")
+        dpg.add_button(
+            label=label,
+            parent="Primary Window",
+            callback=lambda s, a, u:
+                callbacks.display_entry(u),
+            user_data=entry_number
+        )
 
     # Close connection when finished.
     connection.close()
+
+
+def get_entry_text(entry_number):
+    """
+    get_entry_text
+
+    Retrieves the encrypted text associated with an entry in the database.
+    """
+    # Establish connection to database and a cursor object to manipulate it.
+    connection = sqlite3.connect('./entries.db')
+    cursor = connection.cursor()
+
+    # Query the database for a specific journal entry and get its content.
+    for row in cursor.execute(
+            'SELECT * FROM entries WHERE entryNumber = ?',
+            [entry_number]
+    ):
+        entry_text = str(row[2])
+
+    # Close connection when finished.
+    connection.close()
+
+    # Send back the encrypted entry.
+    return entry_text
