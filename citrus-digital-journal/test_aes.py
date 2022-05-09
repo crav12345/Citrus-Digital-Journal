@@ -231,6 +231,24 @@ class TestAES(unittest.TestCase):
             ]
         )
 
+    def test_aes_inv_mix_column(self):
+        self.assertEqual(
+            aes.aes_inv_mix_column(
+                [
+                    ["ba", "84", "e8", "1b"],
+                    ["75", "a4", "8d", "40"],
+                    ["f4", "8d", "06", "7d"],
+                    ["7a", "32", "0e", "5d"]
+                ]
+            ),
+            [
+                ["63", "eb", "9f", "a0"],
+                ["2f", "93", "92", "c0"],
+                ["af", "c7", "ab", "30"],
+                ["a2", "20", "cb", "2b"]
+            ]
+        )
+
     def test_aes_encrypt(self):
         self.assertEqual(
             aes.aes_encrypt("Hello World!!!!!", "aaaaaaaaaaaaaaaa"),
@@ -268,4 +286,7 @@ class TestAES(unittest.TestCase):
         )
 
     def test_aes_decrypt(self):
-        aes.aes_decrypt("0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af", "kappasig")
+        print(aes.aes_encrypt("One two three fo", "abcabcabcabcabca"))
+        print("----------------------------------------------------------------------")
+        print(aes.aes_decrypt("56dc396cbc98507016762ee36c5c8544", "abcabcabcabcabca"))
+        # aes.aes_decrypt("0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af", "kappasig")
