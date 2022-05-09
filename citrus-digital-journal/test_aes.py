@@ -286,7 +286,4 @@ class TestAES(unittest.TestCase):
         )
 
     def test_aes_decrypt(self):
-        print(aes.aes_encrypt("One two three fo", "abcabcabcabcabca"))
-        print("----------------------------------------------------------------------")
-        print(aes.aes_decrypt("56dc396cbc98507016762ee36c5c8544", "abcabcabcabcabca"))
-        # aes.aes_decrypt("0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af", "kappasig")
+        aes.aes_decrypt("0a57a23646bffda32e7b75f06301b97b0670cab7ec2818f99e9cf167aff025af", "kappasig")

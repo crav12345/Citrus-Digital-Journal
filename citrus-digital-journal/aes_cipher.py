@@ -910,8 +910,6 @@ def aes_encrypt(p_text, key):
         for _ in range(0, len(key)):
             p_hex_pairs[_] = format(ord(p_text_snippet[_]), '02x')
 
-        print(p_hex_pairs)
-
         # Generate the keys for each round of encryption.
         round_keys_hex = aes_round_keys(key)
 
