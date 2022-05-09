@@ -159,6 +159,24 @@ class TestAES(unittest.TestCase):
             ]
         )
 
+    def test_aes_inv_nibble_sub(self):
+        self.assertEqual(
+            aes.aes_inv_nibble_sub(
+                [
+                    ["63", "eb", "9f", "a0"],
+                    ["c0", "2f", "93", "92"],
+                    ["ab", "30", "af", "c7"],
+                    ["20", "cb", "2b", "a2"]
+                ]
+            ),
+            [
+                ["00", "3c", "6e", "47"],
+                ["1f", "4e", "22", "74"],
+                ["0e", "08", "1b", "31"],
+                ["54", "59", "0b", "1a"]
+            ]
+        )
+
     def test_aes_shift_row(self):
         self.assertEqual(
             aes.aes_shift_row(
@@ -174,6 +192,24 @@ class TestAES(unittest.TestCase):
                 ["2f", "93", "92", "c0"],
                 ["af", "c7", "ab", "30"],
                 ["a2", "20", "cb", "2b"]
+            ]
+        )
+
+    def test_aes_inv_shift_row(self):
+        self.assertEqual(
+            aes.aes_inv_shift_row(
+                [
+                    ["63", "eb", "9f", "a0"],
+                    ["2f", "93", "92", "c0"],
+                    ["af", "c7", "ab", "30"],
+                    ["a2", "20", "cb", "2b"]
+                ]
+            ),
+            [
+                ["63", "eb", "9f", "a0"],
+                ["c0", "2f", "93", "92"],
+                ["ab", "30", "af", "c7"],
+                ["20", "cb", "2b", "a2"]
             ]
         )
 
