@@ -860,7 +860,7 @@ def aes_encrypt(p_text, key):
     # is not the case, pad the plaintext with enough spaces to make it so.
     remainder = len(p_text) % 16
     if remainder > 0:
-        p_text += "-" * (16 - remainder)
+        p_text += " " * (16 - remainder)
 
     # Check that the key doesn't need to be padded either.
     if len(key) < 16:
@@ -1072,7 +1072,7 @@ def aes_decrypt(c_text, key):
             for hex_pair in state_hex:
                 hex_string = ("0x" + hex_pair)[2:]
                 bytes_object = bytes.fromhex(hex_string)
-                if (bytes_object.isascii()):
+                if bytes_object.isascii():
                     ascii_string = bytes_object.decode("ASCII")
                 else:
                     ascii_string = "?"

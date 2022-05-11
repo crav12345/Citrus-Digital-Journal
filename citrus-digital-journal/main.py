@@ -34,11 +34,25 @@ with dpg.window(tag="Primary Window"):
     dpg.add_text("CITRUS DIGITAL JOURNAL")
     dpg.add_text("")
     dpg.add_button(label="New Entry", callback=callbacks.new_entry)
+    dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
     dpg.add_text("")
     dpg.add_text("ENTRY NUMBER | DATE")
 
     # Fill rows with all entries in database.
     database.display_all()
+
+# Create new theme for GUI.
+with dpg.theme() as global_theme:
+    with dpg.theme_component(dpg.mvAll):
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (255, 171, 153), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
+    with dpg.theme_component(dpg.mvAll):
+        dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (255, 106, 75), category=dpg.mvThemeCat_Core)
+    with dpg.theme_component(dpg.mvAll):
+        dpg.add_theme_color(dpg.mvThemeCol_Button, (255, 134, 134), category=dpg.mvThemeCat_Core)
+
+# Apply global theme to GUI.
+dpg.bind_theme(global_theme)
 
 # Create and show the window to be displayed by the OS.
 dpg.create_viewport(
