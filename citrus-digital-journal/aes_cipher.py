@@ -913,8 +913,9 @@ def aes_encrypt(p_text, key):
         # Generate the keys for each round of encryption.
         round_keys_hex = aes_round_keys(key)
 
-        # Counter to keep track of which pair of hex integers is on deck.
+        # Counters to keep track of which pair of hex integers is on deck.
         pairs_index = 0
+        character_index = 0
 
         # Fill s_hex matrix with the plaintext hex representations.
         for row in range(len(s_hex)):
@@ -922,8 +923,19 @@ def aes_encrypt(p_text, key):
                 s_hex[row][col] = p_hex_pairs[pairs_index]
                 pairs_index += 1
 
+        # Convert current round key to a 4x4 matrix.
+        for row in range(len(key_hex_matrix)):
+            for col in range(len(key_hex_matrix[row])):
+                key_hex_matrix[row][col] = \
+                    round_keys_hex[0][character_index] + \
+                    round_keys_hex[0][character_index + 1]
+                character_index += 2
+
+        # Add the first key.
+        out_state_hex = aes_state_xor(s_hex, key_hex_matrix)
+
         # Begin 10 rounds of encryption.
-        for aes_round in range(11):
+        for aes_round in range(1, 11):
             # Locates characters in round_keys_hex.
             character_index = 0
 
@@ -935,11 +947,16 @@ def aes_encrypt(p_text, key):
                         round_keys_hex[aes_round][character_index + 1]
                     character_index += 2
 
-            # Perform the encryption round.
-            if aes_round == len(round_keys_hex) - 1:
-                out_state_hex = aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix)))
-            else:
-                out_state_hex = aes_mix_column(aes_shift_row(aes_nibble_sub(aes_state_xor(s_hex, key_hex_matrix))))
+            # ---------- Perform the encryption round. ----------
+            out_state_hex = aes_nibble_sub(out_state_hex)
+            out_state_hex = aes_shift_row(out_state_hex)
+
+            # Don't invert mix columns on last round.
+            if aes_round < 10:
+                out_state_hex = aes_mix_column(out_state_hex)
+
+            out_state_hex = aes_state_xor(key_hex_matrix, out_state_hex)
+            # ----------------------------------------------------
 
         # Convert result matrix to a ciphertext string.
         for state_hex in out_state_hex:
@@ -973,7 +990,6 @@ def aes_decrypt(c_text, key):
     p_text = ""
 
     # Complete AES decryption on each chunk of 32 bits in the ciphertext.
-    # NOTE: c_text doesn't need to be expanded because it's already hex pairs.
     while c_text:
         c_text_snippet = c_text[0: 32]
         c_text = c_text[32:]
@@ -1006,8 +1022,9 @@ def aes_decrypt(c_text, key):
         # decryption.
         round_keys_hex = aes_round_keys(key)[::-1]
 
-        # Counter to keep track of which pair of hex integers is on deck.
+        # Counters to keep track of which pair of hex integers is on deck.
         pairs_index = 0
+        character_index = 0
 
         # Fill s_hex matrix with the ciphertext hex pairs.
         for row in range(len(s_hex)):
@@ -1016,8 +1033,19 @@ def aes_decrypt(c_text, key):
                 s_hex[row][col] = pair
                 pairs_index += 2
 
+        # Convert current round key to a 4x4 matrix.
+        for row in range(len(key_hex_matrix)):
+            for col in range(len(key_hex_matrix[row])):
+                key_hex_matrix[row][col] = \
+                    round_keys_hex[0][character_index] + \
+                    round_keys_hex[0][character_index + 1]
+                character_index += 2
+
+        # Add the first key.
+        out_state_hex = aes_state_xor(s_hex, key_hex_matrix)
+
         # Begin 10 rounds of decryption.
-        for aes_round in range(11):
+        for aes_round in range(1, 11):
             # Locates characters in round_keys_hex.
             character_index = 0
 
@@ -1029,19 +1057,28 @@ def aes_decrypt(c_text, key):
                         round_keys_hex[aes_round][character_index + 1]
                     character_index += 2
 
-            # Perform the decryption round.
-            if aes_round == 0:
-                out_state_hex = aes_inv_nibble_sub(aes_inv_shift_row(aes_state_xor(s_hex, key_hex_matrix)))
-            else:
-                out_state_hex = aes_inv_nibble_sub(aes_inv_shift_row(aes_inv_mix_column(aes_state_xor(s_hex, key_hex_matrix))))
+            # ---------- Perform decryption round. -----------
+            out_state_hex = aes_inv_shift_row(out_state_hex)
+            out_state_hex = aes_inv_nibble_sub(out_state_hex)
+            out_state_hex = aes_state_xor(key_hex_matrix, out_state_hex)
+
+            # Don't invert mix columns on last round.
+            if aes_round < 10:
+                out_state_hex = aes_inv_mix_column(out_state_hex)
+            # ------------------------------------------------
 
         # Convert result matrix to a ciphertext string.
         for state_hex in out_state_hex:
             for hex_pair in state_hex:
-                p_text += hex_pair
+                hex_string = ("0x" + hex_pair)[2:]
+                bytes_object = bytes.fromhex(hex_string)
+                if (bytes_object.isascii()):
+                    ascii_string = bytes_object.decode("ASCII")
+                else:
+                    ascii_string = "?"
+                p_text += ascii_string
 
-        # TODO: Convert result back to ASCII characters.
-        # Prefix each pair of hex digits with 0x so it can be converted.
+    return p_text
 
 
 def print_matrix(matrix):

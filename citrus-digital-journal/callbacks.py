@@ -46,7 +46,7 @@ def new_entry():
     # Populate the new window.
     dpg.add_text("NEW ENTRY")
     dpg.add_input_text(
-        tag="Entry Text",
+        tag="Input Text",
         multiline=True,
         width=WINDOW_WIDTH - INDENT_RIGHT,
         height=WINDOW_HEIGHT - INDENT_BOTTOM
@@ -106,7 +106,7 @@ def encrypt_entry():
     """
     # Encrypt entry.
     encrypted_text = aes.aes_encrypt(
-        dpg.get_value("Entry Text"),
+        dpg.get_value("Input Text"),
         dpg.get_value("Key Text")
     )
 
@@ -129,8 +129,52 @@ def encrypt_entry():
     dpg.delete_item("Entry Form")
 
 
-def decrypt_entry():
-    print("Not implemented")
+def key_prompt(encrypted_text):
+    """
+    key_prompt
+
+    Prompts user for key to decrypt the journal entry.
+    """
+    dpg.push_container_stack(
+        dpg.add_window(
+            tag="Key Form",
+            label="New Key",
+            width=WINDOW_WIDTH,
+            height=WINDOW_HEIGHT,
+            no_resize=True,
+            no_move=True,
+            no_collapse=True,
+            no_title_bar=True
+        )
+    )
+
+    # Populate the new window.
+    dpg.add_text("SECRET KEY")
+    dpg.add_input_text(
+        tag="Key Text",
+        multiline=False
+    )
+    dpg.add_button(label="DECRYPT", callback=lambda s: decrypt_entry(encrypted_text))
+
+
+def decrypt_entry(encrypted_text):
+    """
+    decrypt_entry
+
+    Decrypts the encrypted text, closes the key prompt window, and renders the
+    decrypted text.
+    """
+    # Grab the key from the key prompt input.
+    key = dpg.get_value("Key Text")
+
+    # Decrypt the encrypted text with the entered key.
+    decrypted_text = aes.aes_decrypt(encrypted_text, key)
+
+    # Set the text of the entry display window to the decrypted text.
+    dpg.set_value("Entry Text", decrypted_text)
+
+    # Get rid of the key form window.
+    close_window("Key Form")
 
 
 def display_entry(entry_number):
@@ -153,8 +197,11 @@ def display_entry(entry_number):
         )
     )
 
+    # Get the entry's text from the database.
+    encrypted_text = database.get_entry_text(entry_number)
+
     # Populate the new window.
     dpg.add_text("Journal Entry #" + entry_number)
-    dpg.add_text(database.get_entry_text(entry_number), wrap=WINDOW_WIDTH - INDENT_RIGHT)
-    dpg.add_button(label="DECRYPT", callback=decrypt_entry)
+    dpg.add_text(encrypted_text, wrap=WINDOW_WIDTH - INDENT_RIGHT, tag="Entry Text")
+    dpg.add_button(label="DECRYPT", callback=lambda s: key_prompt(encrypted_text))
     dpg.add_button(label="EXIT", callback=lambda s: close_window("Entry Display"))
