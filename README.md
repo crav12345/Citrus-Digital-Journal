@@ -14,6 +14,8 @@ A desktop application written in Python which functions as a private journal. En
 
 <sub>\* Logo by Christopher Ravosa :cowboy_hat_face:</sub>
 
+<br />
+
 ## Advanced Encryption Standard (AES)
 [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) is a specification for the encryption of electronic data established by the U.S. National Institute of Standards and Technology (NIST) in 2001. This application utilizes AES to encrypt data in groupings of 128 bits, requiring 10 rounds of encryption for every group of 16 characters. Citrus Digital Journal's AES implementation can be seen in the [aes_cipher.py](https://github.com/crav12345/Citrus-Digital-Journal/blob/main/citrus-digital-journal/aes_cipher.py) file.
 
